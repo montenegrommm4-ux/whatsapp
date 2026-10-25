@@ -1,0 +1,171 @@
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html,body{
+  height:100%;
+  margin:0;
+  background:transparent;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:'Poppins',Arial,sans-serif;
+  overflow:hidden;
+}
+
+.grupo{
+  display:flex;
+  align-items:center;
+  height:64px;
+}
+
+/* ---- icono whatsapp ---- */
+.icono{
+  width:60px;
+  height:60px;
+  border-radius:13px;
+  background:linear-gradient(145deg,#68bd5e,#3f9e48);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 2px 5px rgba(0,0,0,.3);
+  position:relative;
+  z-index:3;
+  opacity:0;
+  transform:scale(.4);
+  animation:pop .9s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+.icono svg{ width:56px; height:56px; overflow:visible; }
+
+/* ---- caja blanca que se expande ---- */
+.caja{
+  position:relative;
+  height:52px;
+  display:flex;
+  align-items:center;
+  margin-left:-14px;
+  padding-left:14px;
+  background:transparent;
+  width:0;
+  overflow:hidden;
+  animation:expandir 1.1s .7s cubic-bezier(.2,.7,.2,1) forwards;
+}
+
+.caja::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:#ffffff;
+  clip-path:polygon(180px 0, 100% 0, 100% 100%, 151px 100%);
+  z-index:0;
+}
+
+@keyframes expandir{
+  from{ width:0; }
+  to{ width:var(--ancho,560px); }
+}
+
+/* ---- etiqueta INFORMES (trapecio azul) ---- */
+.etiqueta{
+  position:absolute;
+  left:0; top:0; bottom:0;
+  width:184px;
+  z-index:1;
+  background:#178fc9;
+  clip-path:polygon(0 5px, 100% 0, calc(100% - 29px) 100%, 0 calc(100% - 5px));
+  transform-origin:bottom center;
+  transform:scaleY(0);
+  animation:armar .9s 1.3s cubic-bezier(.25,.9,.3,1) forwards;
+}
+
+.etiqueta .txt{ position:absolute; left:37px; top:0; }
+
+.numero{
+  position:relative;
+  z-index:2;
+  margin-left:195px;
+  color:#0c3a63;
+  font-weight:800;
+  font-size:26px;
+  letter-spacing:.3px;
+  white-space:nowrap;
+}
+
+.numero .n1,.numero .n2{ display:inline-block; white-space:pre; }
+.numero .n1{ --d:2.3s; }
+.numero .n2{ --d:3.5s; }
+
+/* cada digito sube desde abajo con rebote, uno tras otro */
+.numero .c{
+  display:inline-block;
+  white-space:pre;
+  opacity:0;
+  transform:translateY(32px) scale(.5) rotate(-10deg);
+  animation:letra .65s cubic-bezier(.34,1.7,.5,1) forwards;
+  animation-delay:calc(var(--d) + var(--i) * 70ms);
+}
+@keyframes letra{
+  0%{ opacity:0; transform:translateY(32px) scale(.5) rotate(-10deg); }
+  100%{ opacity:1; transform:translateY(0) scale(1) rotate(0); }
+}
+
+@keyframes revelar{
+  from{ clip-path:inset(0 100% 0 0); }
+  to{ clip-path:inset(0 0 0 0); }
+}
+
+@keyframes entrar-derecha{
+  from{ opacity:0; transform:translateX(45px); }
+  to{ opacity:1; transform:translateX(0); }
+}
+
+@keyframes aparecer{
+  from{opacity:0; transform:translateX(-6px);}
+  to{opacity:1; transform:translateX(0);}
+}
+
+@keyframes armar{
+  0%{ transform:scaleY(0); }
+  70%{ transform:scaleY(1.06); }
+  100%{ transform:scaleY(1); }
+}
+
+@keyframes pop{
+  from{opacity:0; transform:scale(.4);}
+  to{opacity:1; transform:scale(1);}
+}
+
+/* oculto: sin animaciones, todo queda en su estado inicial (invisible) */
+.grupo:not(.activo) *{ animation:none !important; }
+.grupo:not(.activo){ visibility:hidden; }
+
+/* salida al ocultar con la tecla 1 */
+.saliendo .numero .c{
+  animation:sale-letra .4s ease-in forwards;
+  animation-delay:calc(var(--i) * 25ms);
+}
+.saliendo .etiqueta{ animation:desarmar .5s .55s cubic-bezier(.6,0,.8,.4) forwards; }
+.saliendo .caja{ animation:encoger .65s .6s cubic-bezier(.6,0,.4,1) forwards; }
+.saliendo .icono{ animation:despop .5s 1.2s cubic-bezier(.6,-.4,.8,.4) forwards; }
+
+@keyframes sale-letra{
+  from{ opacity:1; transform:translateY(0) scale(1); }
+  to{ opacity:0; transform:translateY(-32px) scale(.5) rotate(10deg); }
+}
+@keyframes desarmar{
+  from{ transform:scaleY(1); }
+  to{ transform:scaleY(0); }
+}
+@keyframes encoger{
+  from{ width:var(--ancho,560px); }
+  to{ width:0; }
+}
+@keyframes despop{
+  from{ opacity:1; transform:scale(1); }
+  to{ opacity:0; transform:scale(.3); }
+}
+@keyframes salir{
+  from{ opacity:1; transform:translateY(0); }
+  to{ opacity:0; transform:translateY(28px); }
+}

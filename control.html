@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Control Remoto</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #111;
+    color: white;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    gap: 16px;
+  }
+  h2 { font-size: 20px; margin-bottom: 4px; }
+  #estado {
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    background: #222;
+    text-align: center;
+    min-width: 200px;
+  }
+  .btn {
+    padding: 30px;
+    font-size: 24px;
+    font-weight: bold;
+    width: 100%;
+    max-width: 400px;
+    border: none;
+    border-radius: 15px;
+    color: white;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .btn:active { opacity: 0.7; }
+  .btn-mostrar { background: #008cff; }
+  .btn-ocultar { background: #555; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<h2>🎮 Control Remoto</h2>
+<div id="estado">⏳ Conectando al servidor...</div>
+
+<button class="btn btn-mostrar" id="btnMostrar" disabled onclick="enviar('mostrar')">
+  ▶️ MOSTRAR
+</button>
+
+<button class="btn btn-ocultar" id="btnOcultar" disabled onclick="enviar('ocultar')">
+  ⏹️ OCULTAR
+</button>
+
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script>
+var PEER_ID_OBS = 'obs-inferior-montenegro';
+var estadoEl = document.getElementById('estado');
+var btnMostrar = document.getElementById('btnMostrar');
+var btnOcultar = document.getElementById('btnOcultar');
+var peerCel = null;
+var conexion = null;  // conexión persistente
+
+function conectar(){
+  estadoEl.textContent = '⏳ Conectando...';
+  estadoEl.style.background = '#222';
+
+  peerCel = new Peer();
+
+  peerCel.on('open', function(){
+    // Una vez que el peer está listo, conectar al OBS
+    conexion = peerCel.connect(PEER_ID_OBS, { reliable: true });
+
+    conexion.on('open', function(){
+      estadoEl.textContent = '✅ Conectado — Listo para controlar';
+      estadoEl.style.background = '#1a5c1a';
+      btnMostrar.disabled = false;
+      btnOcultar.disabled = false;
+    });
+
+    conexion.on('close', function(){
+      estadoEl.textContent = '❌ Conexión cerrada — Reconectando...';
+      estadoEl.style.background = '#5c1a1a';
+      btnMostrar.disabled = true;
+      btnOcultar.disabled = true;
+      conexion = null;
+      setTimeout(reconectar, 3000);
+    });
+
+    conexion.on('error', function(err){
+      console.error('Error de conexión:', err);
+      estadoEl.textContent = '❌ Error — Reconectando...';
+      estadoEl.style.background = '#5c1a1a';
+      btnMostrar.disabled = true;
+      btnOcultar.disabled = true;
+      setTimeout(reconectar, 3000);
+    });
+  });
+
+  peerCel.on('error', function(err){
+    console.error('PeerJS error:', err);
+    estadoEl.textContent = '❌ ' + err.type + ' — Reintentando...';
+    estadoEl.style.background = '#5c1a1a';
+    btnMostrar.disabled = true;
+    btnOcultar.disabled = true;
+    setTimeout(reconectar, 4000);
+  });
+
+  peerCel.on('disconnected', function(){
+    estadoEl.textContent = '🔄 Desconectado — Reconectando...';
+    estadoEl.style.background = '#5c4a1a';
+    setTimeout(function(){ peerCel.reconnect(); }, 2000);
+  });
+}
+
+function reconectar(){
+  if (peerCel) {
+    try { peerCel.destroy(); } catch(e){}
+  }
+  conectar();
+}
+
+function enviar(comando){
+  if (conexion && conexion.open) {
+    conexion.send(comando);
+    // Feedback visual rápido
+    var btn = (comando === 'mostrar') ? btnMostrar : btnOcultar;
+    btn.style.transform = 'scale(0.95)';
+    setTimeout(function(){ btn.style.transform = ''; }, 150);
+  } else {
+    estadoEl.textContent = '⚠️ Sin conexión — Reconectando...';
+    estadoEl.style.background = '#5c4a1a';
+    reconectar();
+  }
+}
+
+// Iniciar
+conectar();
+</script>
+</body>
+</html>
+
+</html>
